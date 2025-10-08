@@ -1,4 +1,3 @@
- 
 
 const express = require('express');
 const cors = require('cors');
@@ -10,7 +9,7 @@ app.use(cors());
 app.use(express.json());
 
 // Connect to MongoDB
-mongoose.connect("mongodb+srv://navinraj:1624721@cluster0.grgh9ma.mongodb.net/passkey?retryWrites=true&w=majority&appName=Cluster0")
+mongoose.connect("mongodb+srv://navin:navin1100@cluster0.jvmvh5b.mongodb.net/bulkmail?retryWrites=true&w=majority&appName=Cluster0")
   .then(() => console.log("✅ MongoDB connected"))
   .catch(err => console.log("❌ MongoDB connection failed:", err));
 
@@ -74,3 +73,5 @@ app.post('/sendmail', async (req, res) => {
 app.listen(5000, () => {
   console.log("🚀 Server started on port 5000");
 });
+
+ 
