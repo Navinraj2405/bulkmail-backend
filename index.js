@@ -33,7 +33,7 @@ app.post('/sendmail', async (req, res) => {
     }
 
     const creds = data[0].toJSON();
-    const user = creds.user || creds.User; // supports both lowercase and uppercase
+    const user = creds.username || creds.User; // supports both lowercase and uppercase
     const pass = creds.pass || creds.Pass;
 
     if (!user || !pass) {
