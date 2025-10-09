@@ -33,8 +33,9 @@ app.post('/sendmail', async (req, res) => {
     }
 
     const creds = data[0].toJSON();
-    const user = creds.username || creds.User; // supports both lowercase and uppercase
+    const user = creds.username || creds.user || creds.User;
     const pass = creds.pass || creds.Pass;
+
 
     if (!user || !pass) {
       console.error("❌ Email credentials missing in DB:", creds);
