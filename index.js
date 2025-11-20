@@ -1,68 +1,88 @@
-const express = require('express');
+ const express = require('express');
 const cors = require('cors');
 const nodemailer = require("nodemailer");
 const mongoose = require('mongoose');
+
 const app = express();
-app.use(cors());
 
 app.use(express.json());
 
-// MongoDB connection
+// Correct CORS
+app.use(cors({
+    origin: 'https://bulk-mail-frontend-blush.vercel.app' 
+}));
 
-mongoose.connect("mongodb+srv://navinraj:147852@cluster0.wpj3jve.mongodb.net/passkey?appName=Cluster0").then(function(){
+// MongoDB connection
+mongoose.connect("mongodb+srv://navinraj:147852@cluster0.wpj3jve.mongodb.net/passkey?appName=Cluster0")
+.then(function() {
   console.log("Connected to MongoDB");
-}).catch(function(){
+})
+.catch(function() {
   console.log("MongoDB connection failed");
 })
 
-const credential = mongoose.model("credential",{},"bulkmail")
+const credential = mongoose.model("credential", {}, "bulkmail");
 
-
-// Create a test account or replace with real credentials.
-
-
+// Send mail route
 app.post("/sendmail", function (req, res) {
 
   var msg = req.body.msg;
-  var emailList = req.body.emailList;
+  var emailList = req.body.emaillist;   // ✅ FIXED (your frontend sends emaillist)
+
+  // Check if email list is missing
+  if (!emailList || emailList.length === 0) {
+    return res.send(false);
+  }
 
   credential.findOne().then(function(data){
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: data.toJSON().user,
-    pass: data.toJSON().pass,
-  },
-});
- 
-  new Promise(async function(resolve,reject){
-try {
-    for (var i = 0; i < emailList.length; i++) {
-     await transporter.sendMail(
-        {
-        from: "navinrajmsw@gmail.com",
-        to: emailList[i],
-        subject: "A message from Mulk mail app",
-        text:msg,
-      }
-      )
-      console.log("Email sent to: " + emailList[i]);
+
+    // Check if no credentials found
+    if (!data) {
+      console.log("No credential found in database");
+      return res.send(false);
     }
-    resolve("success");
-  }
-  catch (error) {
-    reject("Failed");
-  }
-  }).then(function(){
-    res.send(true);
-  }).catch(function(){
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: data.toJSON().user,
+        pass: data.toJSON().pass,
+      },
+    });
+
+    new Promise(async function(resolve, reject) {
+      try {
+
+        for (var i = 0; i < emailList.length; i++) {
+
+          await transporter.sendMail({
+            from: data.toJSON().user,  // safer than hardcoding
+            to: emailList[i],
+            subject: "A message from Mulk mail app",
+            text: msg,
+          });
+
+          console.log("Email sent to:", emailList[i]);
+        }
+
+        resolve("success");
+      }
+      catch (error) {
+        console.log(error);
+        reject("Failed");
+      }
+
+    }).then(function() {
+      res.send(true);
+    })
+    .catch(function() {
+      res.send(false);
+    })
+
+  }).catch(function(error){
+    console.log(error);
     res.send(false);
-  })  
-
-}).catch(function(error){
-  console.log(error);
-})
-
+  })
 })
 
 app.listen(5000, function () {
