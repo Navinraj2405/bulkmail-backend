@@ -8,9 +8,12 @@ const app = express();
 app.use(express.json());
 
 // Correct CORS
-app.use(cors({
-    origin: 'https://bulk-mail-frontend-blush.vercel.app' 
+ app.use(cors({
+    origin: ['https://bulk-mail-frontend-blush.vercel.app'],
+    methods: ['GET','POST'],
+    allowedHeaders: ['Content-Type'],
 }));
+
 
 // MongoDB connection
 mongoose.connect("mongodb+srv://navinraj:147852@cluster0.wpj3jve.mongodb.net/passkey?appName=Cluster0")
