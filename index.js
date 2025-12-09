@@ -2,13 +2,13 @@
 const cors = require('cors');
 const nodemailer = require("nodemailer");
 const mongoose = require('mongoose');
-
 const app = express();
+
 app.use(express.json());
 
-// ✅ FIXED CORS — allows both of your Vercel URLs
 app.use(cors({
     origin: [
+        "http://localhost:5173",
         "https://bulk-mail-frontend-blush.vercel.app",
         "https://bulk-mail-frontend-ghcwonqmo-navinrajs-projects.vercel.app"
     ],
@@ -16,23 +16,38 @@ app.use(cors({
     allowedHeaders: ["Content-Type"],
 }));
 
-// MongoDB connection
+// DB Connection
 mongoose.connect("mongodb+srv://navinraj:147852@cluster0.wpj3jve.mongodb.net/passkey?appName=Cluster0")
-.then(() => console.log("Connected to MongoDB"))
-.catch(() => console.log("MongoDB connection failed"));
+  .then(() => console.log("Connected to MongoDB"))
+  .catch(() => console.log("MongoDB connection failed"));
 
-const credential = mongoose.model("credential", {}, "bulkmail");
+// Schema
+const credentialSchema = new mongoose.Schema({
+  user: String,
+  pass: String
+});
+const credential = mongoose.model("credential", credentialSchema, "bulkmail");
 
-// Send mail route
+// Test route to see DB data
+app.get("/checkdata", async (req, res) => {
+  const data = await credential.find({});
+  console.log("DB DATA:", data);
+  res.json(data);
+});
+
+// Send Mail
 app.post("/sendmail", function (req, res) {
+
     var msg = req.body.msg;
-    var emailList = req.body.emaillist;
+    var emailList = req.body.emaillist;  // FIXED
 
     if (!emailList || emailList.length === 0) {
         return res.send(false);
     }
 
     credential.findOne().then(function (data) {
+
+        console.log("Fetched from DB:", data);
 
         if (!data) {
             console.log("No credential found in DB");
@@ -42,8 +57,8 @@ app.post("/sendmail", function (req, res) {
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
-                user: data.toJSON().user,
-                pass: data.toJSON().pass,
+                user: data.user,
+                pass: data.pass,
             },
         });
 
@@ -51,7 +66,7 @@ app.post("/sendmail", function (req, res) {
             try {
                 for (let i = 0; i < emailList.length; i++) {
                     await transporter.sendMail({
-                        from: data.toJSON().user,
+                        from: data.user,
                         to: emailList[i],
                         subject: "A message from Bulk mail app",
                         text: msg,
