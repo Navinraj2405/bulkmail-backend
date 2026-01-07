@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const nodemailer = require("nodemailer");
 const mongoose = require('mongoose');
+require("dotenv").config();
+
 const app = express();
 
 app.use(express.json());
@@ -17,20 +19,11 @@ app.use(cors({
 }));
 
 // DB Connection
-mongoose.connect("mongodb+srv://navinraj:147852@cluster0.wpj3jve.mongodb.net/passkey?appName=Cluster0")
+mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("Connected to MongoDB"))
     .catch(() => console.log("MongoDB connection failed"));
 
 const credential = mongoose.model("credential", {}, "bulkmail");
-
-
-// // Test route to see DB data
-// app.get("/checkdata", async (req, res) => {
-//   const data = await credential.find({});
-//   console.log("DB DATA:", data);
-//   res.json(data);
-// });
-
 
 app.post("/sendemail", function (req, res) {
     var msg = req.body.msg;
@@ -50,8 +43,8 @@ app.post("/sendemail", function (req, res) {
 
                 for (var i = 0; i < emailList.length; i++) {
                     await transporter.sendMail({
-                        from: "navinrajmsw@gmail.com",
-                        to: emailList[0],
+                        from: process.env.EMAIL_USER,
+                        to: emailList[i],
                         subject: "Test Email",
                         text: msg
                     }
@@ -60,6 +53,7 @@ app.post("/sendemail", function (req, res) {
                 }
                 resolve("Success");
             } catch (error) {
+                console.error("Mail error:", error);
                 reject("Faild");
             }
         }).then(function () {
@@ -74,6 +68,7 @@ app.post("/sendemail", function (req, res) {
 
 })
 
-app.listen(5000, function () {
-    console.log("Server started on port 5000");
+ const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
